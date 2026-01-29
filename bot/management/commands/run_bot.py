@@ -403,15 +403,26 @@ class Command(BaseCommand):
 
         # --- NEW: User Requests Deletion ---
         if action == "reqdel":
-            if post.author.telegram_id != user_id: return
+            # Security Check: Compare as Strings to avoid Type Mismatch
+            if str(post.author.telegram_id) != str(user_id):
+                await query.answer("⛔ You can only delete your own posts!", show_alert=True)
+                return
+
             await query.edit_message_text("✅ Deletion requested. Admin notified.")
+            
             # Notify Admin
-            kb = [[InlineKeyboardButton("🗑️ Confirm Delete", callback_data=f"admindel_{post.id}")]]
-            await context.bot.send_message(
-                chat_id=admin_id,
-                text=f"🗑️ <b>Delete Request!</b>\nUser: {post.author.first_name}\nPost ID: {post.id}\n\n{post.content[:100]}...",
-                reply_markup=InlineKeyboardMarkup(kb), parse_mode='HTML'
-            )
+            admin_kb = [[InlineKeyboardButton("🗑️ Confirm Delete", callback_data=f"admindel_{post.id}")]]
+            try:
+                await context.bot.send_message(
+                    chat_id=admin_id,
+                    text=f"🗑️ <b>Delete Request!</b>\n\n👤 User: {post.author.first_name}\n🆔 Post ID: {post.id}\n\n📄 Content:\n{post.content[:100]}...",
+                    reply_markup=InlineKeyboardMarkup(admin_kb), 
+                    parse_mode='HTML'
+                )
+            except Exception as e:
+                print(f"Admin notify failed: {e}")
+            return
+
 
         # --- NEW: Admin Force Delete ---
         elif action == "admindel":
