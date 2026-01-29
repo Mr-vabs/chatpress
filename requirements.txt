@@ -1,0 +1,15 @@
+anyio==4.12.1
+asgiref==3.11.0
+certifi==2026.1.4
+Django==6.0.1
+fg==0.0.5
+h11==0.16.0
+httpcore==1.0.9
+httpx==0.28.1
+idna==3.11
+pillow==12.1.0
+python-decouple==3.8
+python-telegram-bot==22.6
+sqlparse==0.5.5
+typing_extensions==4.15.0
+tzdata==2025.3
