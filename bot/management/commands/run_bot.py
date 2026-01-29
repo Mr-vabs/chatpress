@@ -75,6 +75,9 @@ class Command(BaseCommand):
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = update.effective_user
+        # Check agar user website se aaya hai
+        if context.args and context.args[0] == 'web_post':
+            await update.message.reply_text("👋 <b>Welcome from the Web Realm!</b>\nSend your text/photo to create a post.", parse_mode='HTML')
         admin_id = str(config('ADMIN_ID'))
         
         # User Get/Create
