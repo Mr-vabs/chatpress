@@ -7,6 +7,11 @@ from decouple import config
 import os
 from django.core.files.base import ContentFile
 
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
+# ... Baaki imports waise hi rehne dein ...
+
+
 # GLOBAL STATE (Memory storage for Editing/Remarking steps)
 USER_STATE = {}
 
@@ -14,6 +19,23 @@ class Command(BaseCommand):
     help = 'Runs the Telegram Bot'
 
     def handle(self, *args, **kwargs):
+      # --- NEW: Dummy Web Server to keep Render Awake ---
+        class SimpleHTTP(BaseHTTPRequestHandler):
+            def do_GET(self):
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(b'I am alive! Bot is running.')
+
+        def start_dummy_server():
+            # Render PORT environment variable deta hai, use wo chahiye
+            port = int(os.environ.get("PORT", 10000))
+            server = HTTPServer(('0.0.0.0', port), SimpleHTTP)
+            print(f"🌍 Dummy server running on port {port}")
+            server.serve_forever()
+
+        # Server ko alag thread mein start karo taaki bot block na ho
+        threading.Thread(target=start_dummy_server, daemon=True).start()
+        # --------------------------------------------------
         token = config('TELEGRAM_TOKEN')
         application = ApplicationBuilder().token(token).build()
 
