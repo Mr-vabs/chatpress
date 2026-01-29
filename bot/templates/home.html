@@ -109,7 +109,7 @@
                 <img src="{{ post.image.url }}" class="w-full rounded-lg mb-4">
                 {% endif %}
                 
-                <div class="text-gray-800 dark:text-gray-300 text-lg whitespace-pre-wrap">{% load blog_filters %}{{ post.content|render_links|render_tags|striptags|safe }}
+                <div class="text-gray-800 dark:text-gray-300 text-lg whitespace-pre-wrap">{% load blog_filters %}{{ post.content|render_links|render_tags }}
                 </div>
 
             </div>
