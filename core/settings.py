@@ -21,8 +21,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
+# Sab allow kar do (Easy fix)
+# ALLOWED_HOSTS = ['*']
 
-ALLOWED_HOSTS = ['*']
+# YA FIR (Secure fix - Recommended)
+ALLOWED_HOSTS = ['chatpress-web.onrender.com', 'localhost', '127.0.0.1']
+
+
 # Nayi line aise likhein:
 SECRET_KEY = config('SECRET_KEY')
 
