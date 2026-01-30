@@ -62,7 +62,7 @@ class Command(BaseCommand):
                 except Exception as e:
                     # Notify Admin (No HTML parse mode to avoid errors on raw exception text)
                     try:
-                        requests.get(f"https://api.telegram.org/bot{bot_token}/sendMessage?chat_id={admin_id}&text=🚨 WEBSITE DOWN! Error: {str(e)}")
+                        requests.get(f"https://api.telegram.org/bot{bot_token}/sendMessage?chat_id={admin_id}&text=🚨 WEBSITE DOWN! Error: {str(e)}\n\nhttps://stats.uptimerobot.com/U6FUKEOUqh\nhttps://dashboard.render.com/web/srv-d5tmh0vfte5s73fkfuog")
                     except: pass
 
         threading.Thread(target=start_watchdog, daemon=True).start()
