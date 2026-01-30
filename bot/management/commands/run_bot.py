@@ -22,6 +22,10 @@ class Command(BaseCommand):
                 self.send_response(200)
                 self.end_headers()
                 self.wfile.write(b'I am alive! Bot is running.')
+                
+            def do_HEAD(self):
+                self.send_response(200)
+                self.end_headers()
 
         def start_dummy_server():
             port = int(os.environ.get("PORT", 10000))
