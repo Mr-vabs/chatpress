@@ -13,6 +13,9 @@ def render_links(value):
     # 1. Pehle pure text ko "Escape" karein (Security: Script tags hatane ke liye)
     # Taaki koi <script> hack na kar sake, lekin humare img tags safe rahein
     value = escape(value)
+    
+    # 🔥 FIX: Apostrophe (&#x27;) ko wapas Normal (') bana do
+    value = value.replace('&#x27;', "'")
 
     # 2. Logic to find URLS
     url_pattern = r'(https?://[^\s]+)'
@@ -23,7 +26,7 @@ def render_links(value):
         if url.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
             # Return Image Tag
             return f'''
-                <div class="my-3">
+                <div class="my-1">
                     <img src="{url}" class="w-full h-auto rounded-lg shadow-sm border border-gray-200" loading="lazy" alt="Post Image">
                 </div>
             '''
