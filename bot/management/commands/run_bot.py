@@ -366,6 +366,7 @@ class Command(BaseCommand):
                InlineKeyboardButton("🗑️ Discard", callback_data=f"discard_{new_post.id}")]]
         await update.message.reply_text(f"📝 <b>Draft:</b>\n{text[:100]}...", reply_markup=InlineKeyboardMarkup(kb), parse_mode='HTML')
 
+        # SIRF YE FUNCTION REPLACE KAREIN
     async def handle_button(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
         await query.answer()
@@ -383,7 +384,7 @@ class Command(BaseCommand):
                 u.is_approved = True
                 await sync_to_async(u.save)()
                 await query.edit_message_text(f"✅ Approved {u.first_name}")
-                await context.bot.send_message(u.telegram_id, "🎉 You are approved!")
+                await context.bot.send_message(u.telegram_id, "🎉 <b>You are Approved!</b>\n\nYou can now start posting.", parse_mode='HTML')
             except: pass
             return
 
@@ -391,28 +392,26 @@ class Command(BaseCommand):
             await query.edit_message_text("🚫 Blocked")
             return
 
-        # --- NEW: View User Posts (Admin) ---
+        # --- View User Posts (Admin) ---
         if action == "viewuser":
             if str(user_id) != admin_id: return
             try:
                 target_user = await sync_to_async(TelegramUser.objects.get)(id=target_id)
-                posts = await sync_to_async(list)(BlogPost.objects.filter(author=target_user).order_by('-created_at')[:10]) # Last 10
+                posts = await sync_to_async(list)(BlogPost.objects.filter(author=target_user).order_by('-created_at')[:10])
                 
                 if not posts: await query.edit_message_text(f"📭 {target_user.first_name} has no posts.")
                 else:
                     await context.bot.send_message(chat_id=admin_id, text=f"📜 <b>History: {target_user.first_name}</b>", parse_mode='HTML')
                     for p in posts:
-                        # Admin Delete Button logic here
                         kb = [[InlineKeyboardButton("❌ Admin Delete", callback_data=f"admindel_{p.id}")]]
                         status_icon = "✅" if p.status == 'PUBLISHED' else "📝"
                         await context.bot.send_message(chat_id=admin_id, text=f"{status_icon} [{p.status}] ID: {p.id}\n{p.content[:50]}...", reply_markup=InlineKeyboardMarkup(kb))
             except: pass
             return
 
-        # --- NEW: DM User Button ---
+        # --- DM User Button ---
         if action == "msguser":
             if str(user_id) != admin_id: return
-            # Target ID here is Database ID, need Telegram ID
             try:
                 u = await sync_to_async(TelegramUser.objects.get)(id=target_id)
                 USER_STATE[user_id] = {'action': 'DM_USER', 'target_id': u.telegram_id}
@@ -427,16 +426,14 @@ class Command(BaseCommand):
             await query.edit_message_text("❌ Not found.")
             return
 
-        # --- NEW: User Requests Deletion ---
+        # --- User Requests Deletion ---
         if action == "reqdel":
-            # Security Check: Compare as Strings to avoid Type Mismatch
             if str(post.author.telegram_id) != str(user_id):
                 await query.answer("⛔ You can only delete your own posts!", show_alert=True)
                 return
 
             await query.edit_message_text("✅ Deletion requested. Admin notified.")
             
-            # Notify Admin
             admin_kb = [[InlineKeyboardButton("🗑️ Confirm Delete", callback_data=f"admindel_{post.id}")]]
             try:
                 await context.bot.send_message(
@@ -445,12 +442,10 @@ class Command(BaseCommand):
                     reply_markup=InlineKeyboardMarkup(admin_kb), 
                     parse_mode='HTML'
                 )
-            except Exception as e:
-                print(f"Admin notify failed: {e}")
+            except Exception as e: pass
             return
 
-
-        # --- NEW: Admin Force Delete ---
+        # --- Admin Force Delete ---
         elif action == "admindel":
             if str(user_id) != admin_id: return
             await sync_to_async(post.delete)()
@@ -460,6 +455,7 @@ class Command(BaseCommand):
             await sync_to_async(post.delete)()
             await query.edit_message_text("🗑️ Discarded.")
 
+        # --- FIX 1: Send Action (Added HTML parse_mode) ---
         elif action == "send":
             post.status = 'PENDING'
             await sync_to_async(post.save)()
@@ -470,7 +466,13 @@ class Command(BaseCommand):
                 [InlineKeyboardButton("✏️ Edit", callback_data=f"adminedit_{post.id}"),
                  InlineKeyboardButton("↩️ Remark", callback_data=f"remark_{post.id}")]
             ]
-            await context.bot.send_message(chat_id=admin_id, text=f"🚨 <b>New Post:</b>\n{post.author.first_name}\n\n{post.content}", reply_markup=InlineKeyboardMarkup(kb))
+            # Yahan change kiya hai 👇
+            await context.bot.send_message(
+                chat_id=admin_id, 
+                text=f"🚨 <b>New Post:</b>\n{post.author.first_name}\n\n{post.content}", 
+                reply_markup=InlineKeyboardMarkup(kb),
+                parse_mode='HTML'
+            )
 
         elif action == "edituser":
             USER_STATE[user_id] = {'action': 'USER_EDIT', 'target_id': post.id}
@@ -487,10 +489,19 @@ class Command(BaseCommand):
             await query.edit_message_text(f"✅ Published {post.id}")
             await context.bot.send_message(post.author.telegram_id, f"🎉 <b>Published!</b>\nRank: {await sync_to_async(post.author.get_rank)()}", parse_mode='HTML')
 
+        # --- FIX 2: Reject Action (Added User Notification) ---
         elif action == "reject":
             post.status = 'REJECTED'
             await sync_to_async(post.save)()
             await query.edit_message_text(f"❌ Rejected {post.id}")
+            # Yahan notification add kiya hai 👇
+            try:
+                await context.bot.send_message(
+                    chat_id=post.author.telegram_id,
+                    text=f"❌ <b>Post Rejected</b>\n\nYour post (ID: {post.id}) was rejected by Admin.\nCheck /drafts to view or delete it.",
+                    parse_mode='HTML'
+                )
+            except: pass
 
         elif action == "remark":
             USER_STATE[user_id] = {'action': 'ADD_REMARK', 'target_id': post.id}
