@@ -1,3 +1,5 @@
+import requests
+import time
 from django.core.management.base import BaseCommand
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, CallbackQueryHandler, filters
@@ -32,9 +34,29 @@ class Command(BaseCommand):
             server = HTTPServer(('0.0.0.0', port), SimpleHTTP)
             print(f"🌍 Dummy server running on port {port}")
             server.serve_forever()
-
-        threading.Thread(target=start_dummy_server, daemon=True).start()
         # ----------------------------------------
+        
+        # 2. WATCHDOG (Monitor Website & Notify Admin) - NEW FEATURES 🚨
+        def start_watchdog():
+            admin_id = str(config('ADMIN_ID'))
+            website_url = "https://chatpress-web.onrender.com" # <--- Confirm this URL
+            bot_token = config('TELEGRAM_TOKEN')
+            
+            print("🐶 Watchdog started...")
+            
+            while True:
+                time.sleep(300) # Wait 5 minutes
+                try:
+                    response = requests.get(website_url, timeout=30)
+                    if response.status_code != 200:
+                        raise Exception(f"Status Code: {response.status_code}")
+                except Exception as e:
+                    # Alert Admin via Telegram API (Direct call to avoid async complexity here)
+                    alert_msg = f"🚨 <b>ALERT: Website is DOWN!</b>\n\nError: {str(e)}\n\nCheck Render Dashboard immediately."
+                    requests.get(f"https://api.telegram.org/bot{bot_token}/sendMessage?chat_id={admin_id}&text={alert_msg}&parse_mode=HTML")
+
+        threading.Thread(target=start_watchdog, daemon=True).start()
+        # -----------------------------------------------------------
 
         token = config('TELEGRAM_TOKEN')
         application = ApplicationBuilder().token(token).build()
