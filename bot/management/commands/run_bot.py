@@ -34,6 +34,7 @@ class Command(BaseCommand):
             server = HTTPServer(('0.0.0.0', port), SimpleHTTP)
             print(f"🌍 Dummy server running on port {port}")
             server.serve_forever()
+        threading.Thread(target=start_dummy_server, daemon=True).start()
         # ----------------------------------------
         
         # 2. WATCHDOG (Monitor Website & Notify Admin) - NEW FEATURES 🚨
